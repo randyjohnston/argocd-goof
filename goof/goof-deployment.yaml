@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
       - name: juice-shop
-        image: rajohnston/snyk-juice-shop:0.1.4
+        image: rajohnston/snyk-juice-shop:0.1.7
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 3000
