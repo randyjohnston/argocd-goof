@@ -1,0 +1,54 @@
+metadata:
+  name: snyk-test
+  namespace: argowf
+spec:
+  entrypoint: snyk
+  templates:
+    - name: snyk
+      steps:
+        - - name: snyk-os
+            template: snyk-os
+          - name: snyk-code
+            template: snyk-code
+
+    - name: snyk-os
+      container:
+        image: snyk/snyk:node-14
+        command:
+          - /bin/sh
+          - "-c"
+        args:
+          - git clone https://github.com/randyjohnston/juice-shop.git;
+            cd ./juice-shop && npm install && cd ./frontend && npm install && cd ..;
+            snyk auth $SNYK_TOKEN;
+            snyk test --all-projects --org=$SNYK_ORG_ID --remote-repo-url=$REMOTE_REPO --severity-threshold=high --fail-on=upgradable || true;
+            snyk monitor --all-projects --org=$SNYK_ORG_ID --remote-repo-url=$REMOTE_REPO || true;
+        env:
+          - name: SNYK_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: snyk-token
+                key: token
+          - name: SNYK_ORG_ID
+            value: 2e8038b0-773b-436d-9561-a6b2cf890039
+          - name: REMOTE_REPO
+            value: randyjohnston/juice-shop
+    - name: snyk-code
+      container:
+        image: snyk/snyk:node-14
+        command:
+          - /bin/sh
+          - "-c"
+        args:
+          - git clone https://github.com/randyjohnston/juice-shop.git;
+            cd ./juice-shop;
+            snyk auth $SNYK_TOKEN;
+            snyk code test --org=$SNYK_ORG_ID ---severity-threshold=medium || true;
+        env:
+          - name: SNYK_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: snyk-token
+                key: token
+          - name: SNYK_ORG_ID
+            value: 2e8038b0-773b-436d-9561-a6b2cf890039
